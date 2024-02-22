@@ -1,12 +1,15 @@
-import { Provider } from 'react-redux';
-
-import store from '@/stores/Store';
+import { CssBaseline, ThemeProvider } from '@mui/material';
+import { GreendoteTheme } from './containers/GreendoteTheme';
+import theme from './styles/theme';
 
 function App() {
   return (
-    <Provider store={store}>
-      <div>Hello !!!</div>
-    </Provider>
+    <>
+      <CssBaseline />
+      <ThemeProvider theme={theme}>
+        <GreendoteTheme />
+      </ThemeProvider>
+    </>
   );
 }
 
