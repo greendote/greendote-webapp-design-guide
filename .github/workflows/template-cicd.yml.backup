@@ -1,0 +1,61 @@
+name: template-cicd
+
+on:
+  push:
+    branches:
+      - deployment
+
+env:
+  SERVICE_NAME: 'template'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          registry-url: 'https://npm.pkg.github.com'
+
+      - name: Build with Npm
+        run: npm install && npm run test && npm run build
+
+      - name: Packages Zip
+        run: |
+          cp -r ./dist ./deploy/artifacts
+          zip -r deploy.zip ./deploy/**
+
+      - name: AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: 'ap-northeast-2'
+
+      - name: Package to AWS S3
+        run: >
+          aws s3 cp --region ap-northeast-2
+          ./deploy.zip
+          s3://${{ secrets.AWS_S3_BUCKET_NAME }}/${{ env.SERVICE_NAME }}/
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: 'ap-northeast-2'
+      - name: deploy with AWS codeDeploy
+        run: aws deploy create-deployment
+          --application-name GreendoteCodeDeploy
+          --deployment-config-name CodeDeployDefault.OneAtATime
+          --deployment-group-name ${{ env.SERVICE_NAME }}
+          --s3-location bucket=${{ secrets.AWS_S3_BUCKET_NAME }},bundleType=zip,key=${{ env.SERVICE_NAME }}/deploy.zip

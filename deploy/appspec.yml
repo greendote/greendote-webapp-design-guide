@@ -1,0 +1,28 @@
+version: 0.0
+os: linux
+defaults:
+  file_exists_behavior: OVERWRITE
+files:
+  - source: /artifacts
+    destination: /storage/services/common-group/template/artifacts
+  - source: /template.conf
+    destination: /etc/nginx/conf.d
+permissions:
+  - object: /storage/services/common-group/template
+    pattern: '**'
+    owner: centos
+    group: centos
+
+hooks:
+  BeforeInstall:
+    - location: deploy.sh
+      timeout: 60
+      runas: centos
+  AfterInstall:
+    - location: deploy.sh
+      timeout: 60
+      runas: centos
+  ApplicationStart:
+    - location: deploy.sh
+      timeout: 60
+      runas: centos

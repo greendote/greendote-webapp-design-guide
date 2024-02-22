@@ -1,0 +1,27 @@
+name: template-ci
+
+on:
+  pull_request:
+    branches:
+      - 'develop'
+      - '!deployment'
+
+env:
+  SERVICE_NAME: 'template'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          registry-url: 'https://npm.pkg.github.com'
+
+      - name: Build with Npm
+        run: npm install && npm run test && npm run build
